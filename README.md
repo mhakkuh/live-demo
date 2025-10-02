@@ -1,6 +1,10 @@
-This is a fork to help native speakers of scandinavian languages find a suitable clock.
+This is a fork to help native speakers of scandinavian languages find a suitable clock without worrying about languagebarriers.
 i've modified the CSS to make a neat cyberpunk-ish theme as well, this is optional. of course.
-Later versions will have a theme-selector.
+
+Features : Sexy glowing edges, glowing letters/numerals.
+As of now, you can edit the styling in the CSS file.
+
+Later versions will have a theme-selector and some good sliders.
 
 Original readme below
 
