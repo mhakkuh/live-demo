@@ -9,6 +9,41 @@
 <link rel="stylesheet" href="includes/qlocktwo.css">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 <script src="includes/qlocktwo.js"></script>
+<script>
+/* Hard override the built-in fade to prevent any warm/yellow tint */
+(function hardNeon(){
+  // wait until q2 exists
+  function go(){
+    if (!window.q2 || !q2.animation) return requestAnimationFrame(go);
+
+    // 1) instant swap (no tween frames)
+    q2.animation.stepCount = 0;
+    q2.animation.glowSize  = 10;
+
+    // 2) "off" -> magenta, "on" -> cyan (no warm color ever)
+    // [offR,offG,offB, onR,onG,onB]
+    q2.animation.textColor = [255,0,255, 0,255,255];
+    q2.animation.glowColor = [0,0,0,     0,255,255];
+
+    // 3) no-op the fade timer just in case
+    window.onFadeTimerFired = function(){ onFadeTimerCompleted(); };
+
+    // 4) belt & suspenders: force any newly lit nodes to neon
+    const neon = 'color:#0ff !important;text-shadow:0 0 8px #0ff,0 0 18px #0ff,0 0 38px rgba(0,255,255,.95) !important;';
+    const mo = new MutationObserver(muts=>{
+      muts.forEach(m=>{
+        m.addedNodes && m.addedNodes.forEach(n=>{
+          if (n.nodeType===1 && n.classList && n.classList.contains('lit')) n.style = neon;
+        });
+        if (m.target && m.target.classList && m.target.classList.contains('lit')) m.target.style = neon;
+      });
+    });
+    mo.observe(document.getElementById('qlocktwo'), {subtree:true, childList:true, attributes:true, attributeFilter:['class']});
+  }
+  go();
+})();
+</script>
+  
 </head>
 <body>
 
@@ -28,4 +63,5 @@
 </select></p></form></div>
 
 </body>
+
 </html>
