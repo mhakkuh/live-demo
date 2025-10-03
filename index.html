@@ -1,67 +1,143 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <style>
+  html, body { height: 100%; margin: 0; overflow: hidden; }
+  #stage {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent; touch-action: none; z-index: 0;
+  }
+  #scale-wrap {
+    width: 700px; height: 700px;
+    transform-origin: center center; will-change: transform; z-index: 1;
+  }
+  @media (max-width: 900px), (max-height: 900px) { #debugDiv { display: none !important; } }
+</style>
+
 <meta http-equiv="Content-type" content="text/html;charset=utf-8">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="viewport" content="width=700,user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
 <title>QlockTwo</title>
 <link rel="stylesheet" href="includes/qlocktwo.css">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 <script src="includes/qlocktwo.js"></script>
-<script>
-/* Hard override the built-in fade to prevent any warm/yellow tint */
-(function hardNeon(){
-  // wait until q2 exists
-  function go(){
-    if (!window.q2 || !q2.animation) return requestAnimationFrame(go);
 
-    // 1) instant swap (no tween frames)
-    q2.animation.stepCount = 0;
-    q2.animation.glowSize  = 10;
-
-    // 2) "off" -> magenta, "on" -> cyan (no warm color ever)
-    // [offR,offG,offB, onR,onG,onB]
-    q2.animation.textColor = [255,0,255, 0,255,255];
-    q2.animation.glowColor = [0,0,0,     0,255,255];
-
-    // 3) no-op the fade timer just in case
-    window.onFadeTimerFired = function(){ onFadeTimerCompleted(); };
-
-    // 4) belt & suspenders: force any newly lit nodes to neon
-    const neon = 'color:#0ff !important;text-shadow:0 0 8px #0ff,0 0 18px #0ff,0 0 38px rgba(0,255,255,.95) !important;';
-    const mo = new MutationObserver(muts=>{
-      muts.forEach(m=>{
-        m.addedNodes && m.addedNodes.forEach(n=>{
-          if (n.nodeType===1 && n.classList && n.classList.contains('lit')) n.style = neon;
-        });
-        if (m.target && m.target.classList && m.target.classList.contains('lit')) m.target.style = neon;
-      });
-    });
-    mo.observe(document.getElementById('qlocktwo'), {subtree:true, childList:true, attributes:true, attributeFilter:['class']});
+<!-- Responsive stage + scaler -->
+<style>
+  html, body { height: 100%; margin: 0; overflow: hidden; }
+  /* Fullscreen stage that centers the clock */
+  #stage {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent; touch-action: none; z-index: 0;
   }
-  go();
-})();
-</script>
-  
+  /* We scale THIS box (your q2frame is 700x700 by design) */
+  #scale-wrap {
+    width: 700px; height: 700px;
+    transform-origin: center center; will-change: transform; z-index: 1;
+  }
+  /* Hide the debug dropdown on small screens */
+  @media (max-width: 900px), (max-height: 900px) {
+    #debugDiv { display: none !important; }
+  }
+</style>
 </head>
 <body>
 
+<!-- your original markup (we'll wrap it via JS on load) -->
 <div id="q2top"> </div>
 <div id="q2frame">
-<div class="q2border"><div id="q2UL">&bull;</div><div id="q2UR">&bull;</div></div>
-<div id="qlocktwo"></div>
-<div class="q2border"><div id="q2BR">&bull;</div><div id="q2BL">&bull;</div></div>
+  <div class="q2border"><div id="q2UL">&bull;</div><div id="q2UR">&bull;</div></div>
+  <div id="qlocktwo"></div>
+  <div class="q2border"><div id="q2BR">&bull;</div><div id="q2BL">&bull;</div></div>
 </div>
 <div id="q2btm"> </div>
 
-<div id="debugDiv"><form id="debugForm" action="">
-<p>Current&nbsp;Language&nbsp;&nbsp;<select name="langSelect" onchange="onChangeLanguage(this.value);" onkeyup="onChangeLanguage(this.value);">
-<option value="da">Dansk</option>
-<option value="sv">Svensk</option>
-<option value="no">Norsk</option>
-</select></p></form></div>
+<div id="debugDiv">
+  <form id="debugForm" action="">
+    <p>Current&nbsp;Språk&nbsp;&nbsp;
+      <select name="langSelect" onchange="onChangeLanguage(this.value);" onkeyup="onChangeLanguage(this.value);">
+        <option value="da">Dansk</option>
+        <option value="sv">Svensk</option>
+        <option value="no">Norsk</option>
+      </select>
+    </p>
+  </form>
+</div>
 
+<!-- Wrap and scale the clock to fill the screen -->
+<script>
+(function makeQlockResponsive(){
+  function ready(fn){ document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); }
+  ready(function(){
+    var frame = document.getElementById('q2frame');
+    if (!frame) return;
+
+    // Create stage & wrapper once
+    var stage = document.getElementById('stage');
+    if (!stage){
+      stage = document.createElement('div');
+      stage.id = 'stage';
+      var wrap = document.createElement('div');
+      wrap.id  = 'scale-wrap';
+
+      // Insert stage before the frame, then move frame inside wrap
+      frame.parentNode.insertBefore(stage, frame);
+      stage.appendChild(wrap);
+      wrap.appendChild(frame);
+    }
+
+    // Fit logic: scale to contain within viewport (no cropping, preserves aspect)
+    function fit(){
+      var designW = 700, designH = 700;
+      var vw = window.innerWidth, vh = window.innerHeight;
+      var scale = Math.min(vw / designW, vh / designH);
+      var wrapEl = document.getElementById('scale-wrap');
+      if (wrapEl) wrapEl.style.transform = 'scale(' + scale + ')';
+    }
+    fit();
+    window.addEventListener('resize', fit, { passive: true });
+    window.addEventListener('orientationchange', function(){ setTimeout(fit, 60); }, { passive: true });
+  });
+})();
+</script>
+<script>
+(function(){
+  function ensure(){
+    var frame = document.getElementById('q2frame');
+    if(!frame) return;
+
+    // Create stage/wrap once if missing
+    if(!document.getElementById('scale-wrap')){
+      var stage = document.getElementById('stage');
+      if(!stage){
+        stage = document.createElement('div'); stage.id = 'stage';
+        frame.parentNode.insertBefore(stage, frame);
+      }
+      var wrap = document.createElement('div'); wrap.id = 'scale-wrap';
+      stage.appendChild(wrap); wrap.appendChild(frame);
+    }
+
+    // Safe-fit with margin so glows never clip
+    function fit(){
+      var W=700, H=700, vw=window.innerWidth, vh=window.innerHeight;
+      var SAFE = Math.max(12, Math.round(Math.min(vw, vh) * 0.02)); // ~2% or 12px
+      var s = Math.min((vw - 2*SAFE)/W, (vh - 2*SAFE)/H);
+      document.getElementById('scale-wrap').style.transform = 'translateZ(0) scale(' + s + ')';
+    }
+
+    fit();
+    window.addEventListener('resize', fit, {passive:true});
+    window.addEventListener('orientationchange', function(){ setTimeout(fit, 60); }, {passive:true});
+  }
+
+  if (document.readyState !== 'loading') { ensure(); }
+  else { document.addEventListener('DOMContentLoaded', ensure); }
+  window.addEventListener('load', ensure);
+})();
+</script>
 </body>
-
 </html>
