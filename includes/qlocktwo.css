@@ -115,3 +115,18 @@ body {
   from { filter: brightness(1); }
   to   { filter: brightness(1.25); }
 }
+
+<style>
+/* Unlit letters = dim magenta tubes */
+#qlocktwo { color: rgba(255,0,255,.32) !important; text-shadow: 0 0 2px rgba(255,0,255,.15) !important; }
+
+/* Lit letters = strong cyan glow */
+#q2frame .lit {
+  color: #0ff !important;
+  text-shadow:
+    0 0 8px #0ff,
+    0 0 18px #0ff,
+    0 0 38px rgba(0,255,255,.95) !important;
+  filter: drop-shadow(0 0 10px rgba(0,255,255,.55)) drop-shadow(0 0 22px rgba(0,255,255,.35));
+}
+</style>
