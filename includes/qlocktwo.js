@@ -1,4 +1,4 @@
-﻿var q2_lang = 'en';
+var q2_lang = 'en';
 
 var q2 = {
  languages:{
@@ -254,3 +254,56 @@ $(document).ready(function()
     document.forms.debugForm.langSelect.value = lang;
     onChangeLanguage(lang);
 });
+
+// === Safe-fit scaler (waits for #scale-wrap, creates it if missing) ===
+(function safeQlockFit(){
+  function onReady(fn){ document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn); }
+
+  function ensureWrap(){
+    // If wrapper already exists, use it
+    var wrap = document.getElementById('scale-wrap');
+    if (wrap) return wrap;
+
+    // If not, create stage/wrap and move #q2frame inside
+    var frame = document.getElementById('q2frame');
+    if (!frame) return null;
+
+    var stage = document.getElementById('stage');
+    if (!stage){
+      stage = document.createElement('div'); stage.id = 'stage';
+      frame.parentNode.insertBefore(stage, frame);
+    }
+    wrap = document.createElement('div'); wrap.id = 'scale-wrap';
+    stage.appendChild(wrap);
+    wrap.appendChild(frame);
+    return wrap;
+  }
+
+  function install(wrap){
+    function fit(){
+      var W = 700, H = 700;
+      var vw = window.innerWidth, vh = window.innerHeight;
+      var SAFE = Math.max(12, Math.round(Math.min(vw, vh) * 0.02)); // ~2% pad, min 12px
+      var s = Math.min((vw - 2*SAFE)/W, (vh - 2*SAFE)/H);
+      wrap.style.transform = 'translateZ(0) scale(' + s + ')';
+    }
+    fit();
+    window.addEventListener('resize', fit, { passive:true });
+    window.addEventListener('orientationchange', function(){ setTimeout(fit, 60); }, { passive:true });
+  }
+
+  function go(){
+    var wrap = ensureWrap();
+    if (wrap) { install(wrap); }
+    else {
+      // Wait until DOM adds #q2frame / wrapper
+      var mo = new MutationObserver(function(){
+        var w = ensureWrap();
+        if (w){ mo.disconnect(); install(w); }
+      });
+      mo.observe(document.body || document.documentElement, { childList:true, subtree:true });
+    }
+  }
+
+  onReady(go);
+})();
