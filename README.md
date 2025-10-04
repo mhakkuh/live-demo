@@ -1,4 +1,11 @@
 This is a fork to help native speakers of scandinavian languages find a suitable clock without worrying about languagebarriers.
+
+Who is this for?
+this clock might help anyone who struggles to tell the time, even if it's set to militarytime or a normal clock face.
+
+there's no options out there, leaving people who struggle in the dirt.
+that's fucking stupid,and I want to change that.
+
 i've modified the CSS to make a neat cyberpunk-ish theme as well, this is optional. of course.
 
 Features : Sexy glowing edges, glowing letters/numerals.
