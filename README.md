@@ -4,7 +4,7 @@ Who is this for?
 this clock might help anyone who struggles to tell the time, even if it's set to militarytime or a normal clock face.
 
 there's no options out there, leaving people who struggle in the dirt.
-that's fucking stupid,and I want to change that.
+that's fucking stupid,and I want to change that. paying 7000 USD for a clock is, sorry to say,fucking retarded.
 
 i've modified the CSS to make a neat cyberpunk-ish theme as well, this is optional. of course.
 
