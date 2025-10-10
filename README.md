@@ -1,4 +1,4 @@
-#reworked version for WearOS and other smartwatches!!!!#
+
 
 This is a fork to help native speakers of scandinavian languages find a suitable clock without worrying about languagebarriers.
 
